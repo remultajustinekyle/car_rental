@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+  const supabase = supabase.createClient(
+    'https://flucvsqvtjugplxgcdor.supabase.co',
+    'YeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsdWN2c3F2dGp1Z3BseGdjZG9yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxNjEyNjcsImV4cCI6MjA1OTczNzI2N30.dZ3dAaiQrRMQZXfQwKcmILfGIO05iBvervo-V15po9Q'
+  );
+</script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DriveEasy - Car Rental</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+        .car-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .verification-modal {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-car text-2xl mr-2"></i>
+                    <span class="font-semibold text-xl">DriveEasy</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#" class="hover:text-blue-200">Home</a>
+                    <a href="#cars" class="hover:text-blue-200">Our Fleet</a>
+                    <a href="#about" class="hover:text-blue-200">About</a>
+                    <button id="authBtn" class="bg-white text-blue-600 px-4 py-2 rounded-full font-medium hover:bg-blue-50 transition">Sign In</button>
+                </div>
+                <button class="md:hidden focus:outline-none" id="mobile-menu-button">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+            <div class="md:hidden hidden mt-2" id="mobile-menu">
+                <a href="#" class="block py-2 hover:bg-blue-700 px-2 rounded">Home</a>
+                <a href="#cars" class="block py-2 hover:bg-blue-700 px-2 rounded">Our Fleet</a>
+                <a href="#about" class="block py-2 hover:bg-blue-700 px-2 rounded">About</a>
+                <button id="mobileAuthBtn" class="w-full text-left py-2 hover:bg-blue-700 px-2 rounded">Sign In</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">Rent Your Perfect Car</h1>
+            <p class="text-xl md:text-2xl mb-8">Simple, fast, and reliable car rental service at your fingertips</p>
+            <button id="heroAuthBtn" class="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold text-lg hover:bg-blue-50 transition">Get Started</button>
+        </div>
+    </section>
+
+    <!-- Authentication Modal -->
+<div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 mx-4">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800" id="authModalTitle">Sign In</h2>
+            <button id="closeAuthModal" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div id="authForms">
+            <!-- Sign In Form -->
+            <form id="signInForm" class="space-y-4">
+                <div>
+                    <label for="signInEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="signInEmail" class="mt-1 block w-full px-3 py-2 border rounded-md" required>
+                </div>
+                <div>
+                    <label for="signInPassword" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="signInPassword" class="mt-1 block w-full px-3 py-2 border rounded-md" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="rememberMe" type="checkbox" class="h-4 w-4 text-blue-600 rounded">
+                        <label for="rememberMe" class="ml-2 block text-sm text-gray-700">Remember me</label>
+                    </div>
+                    <a href="#" class="text-sm text-blue-600 hover:text-blue-500">Forgot password?</a>
+                </div>
+                <button type="submit" class="w-full py-2 px-4 rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    Sign In
+                </button>
+                <p class="text-center text-sm text-gray-600">
+                    Don't have an account?
+                    <button type="button" id="showSignUp" class="text-blue-600 hover:text-blue-500">Sign up</button>
+                </p>
+            </form>
+
+          <!-- Sign Up Form -->
+<form id="signUpForm" class="space-y-4 hidden">
+    <div>
+      <label for="signUpName" class="block text-sm font-medium text-gray-700">Full Name</label>
+      <input type="text" id="signUpName" class="mt-1 block w-full px-3 py-2 border rounded-md" required>
+    </div>
+    <div>
+      <label for="signUpEmail" class="block text-sm font-medium text-gray-700">Email</label>
+      <input type="email" id="signUpEmail" class="mt-1 block w-full px-3 py-2 border rounded-md" required>
+    </div>
+    <div>
+      <label for="signUpPassword" class="block text-sm font-medium text-gray-700">Password</label>
+      <input type="password" id="signUpPassword" class="mt-1 block w-full px-3 py-2 border rounded-md" required>
+    </div>
+    <div>
+      <label for="signUpConfirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+      <input type="password" id="signUpConfirmPassword" class="mt-1 block w-full px-3 py-2 border rounded-md" required>
+    </div>
+    <div class="flex items-center">
+      <input id="termsAgreement" type="checkbox" class="h-4 w-4 text-blue-600 rounded" required>
+      <label for="termsAgreement" class="ml-2 block text-sm text-gray-700">I agree to Terms and Privacy Policy</label>
+    </div>
+    <button type="submit" id="registerBtn" class="w-full py-2 px-4 rounded-md text-white bg-blue-600 hover:bg-blue-700">
+      Create Account
+    </button>
+    <p class="text-center text-sm text-gray-600">
+      Already have an account?
+      <button type="button" id="showSignIn" class="text-blue-600 hover:text-blue-500">Sign in</button>
+    </p>
+  </form>
+  
+
+        </div>
+            
+           <!-- Email Verification Code -->
+        <div id="verificationForm" class="hidden">
+            <div class="text-center mb-6">
+                <i class="fas fa-envelope-circle-check text-5xl text-blue-500 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-800">Verify Your Email</h3>
+                <p class="text-gray-600">Code sent to <span id="userEmailDisplay" class="font-medium"></span></p>
+            </div>
+            <form id="verifyCodeForm" class="space-y-4">
+                <div class="flex justify-center gap-2">
+                    <input type="text" maxlength="1" class="w-12 h-12 text-xl text-center border rounded-md" required>
+                    <input type="text" maxlength="1" class="w-12 h-12 text-xl text-center border rounded-md" required>
+                    <input type="text" maxlength="1" class="w-12 h-12 text-xl text-center border rounded-md" required>
+                    <input type="text" maxlength="1" class="w-12 h-12 text-xl text-center border rounded-md" required>
+                    <input type="text" maxlength="1" class="w-12 h-12 text-xl text-center border rounded-md" required>
+                    <input type="text" maxlength="1" class="w-12 h-12 text-xl text-center border rounded-md" required>
+                </div>
+                <button type="submit" class="w-full py-2 px-4 rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    Verify Email
+                </button>
+                <p class="text-sm text-center text-gray-600">
+                    Didn't receive a code?
+                    <button type="button" id="resendCode" class="text-blue-600 hover:text-blue-500">Resend</button>
+                </p>
+            </form>
+        </div>
+    </div>
+</div>
+
+   <!-- Verification Success Modal -->
+<div id="verificationSuccessModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 mx-4 text-center">
+        <div class="mb-6">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check-circle text-4xl text-green-500"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Email Verified!</h2>
+            <p class="text-gray-600 mt-2">You can now access all features.</p>
+        </div>
+        <button id="closeVerificationSuccess" class="w-full py-2 px-4 rounded-md text-white bg-blue-600 hover:bg-blue-700">
+            Continue to Dashboard
+        </button>
+    </div>
+</div>
+
+    <!-- Cars Section -->
+    <section id="cars" class="py-16 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Our Fleet</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Car 1 -->
+                <div class="car-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300">
+                    <img src="https://images.unsplash.com/photo-1494976388531-d1058494cdd8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="Car" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Toyota Camry</h3>
+                        <div class="flex items-center mt-2 text-yellow-400">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                            <span class="text-gray-600 ml-2">4.7 (128)</span>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <div>
+                                <span class="text-gray-600">From</span>
+                                <span class="text-xl font-bold text-blue-600 ml-1">$45</span>
+                                <span class="text-gray-600">/day</span>
+                            </div>
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Rent Now</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Car 2 -->
+                <div class="car-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300">
+                    <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="Car" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-800">BMW X5</h3>
+                        <div class="flex items-center mt-2 text-yellow-400">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <span class="text-gray-600 ml-2">4.2 (89)</span>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <div>
+                                <span class="text-gray-600">From</span>
+                                <span class="text-xl font-bold text-blue-600 ml-1">$95</span>
+                                <span class="text-gray-600">/day</span>
+                            </div>
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Rent Now</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Car 3 -->
+                <div class="car-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300">
+                    <img src="https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="Car" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Honda Civic</h3>
+                        <div class="flex items-center mt-2 text-yellow-400">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <span class="text-gray-600 ml-2">4.9 (156)</span>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <div>
+                                <span class="text-gray-600">From</span>
+                                <span class="text-xl font-bold text-blue-600 ml-1">$35</span>
+                                <span class="text-gray-600">/day</span>
+                            </div>
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Rent Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-8 md:mb-0">
+                    <img src="https://images.unsplash.com/photo-1486262715613-66de8f13b5d1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="About Us" class="rounded-lg shadow-lg w-full">
+                </div>
+                <div class="md:w-1/2 md:pl-12">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">About DriveEasy</h2>
+                    <p class="text-gray-600 mb-4">
+                        DriveEasy is a premier car rental service dedicated to providing high-quality vehicles at affordable prices. 
+                        With over 10 years of experience in the industry, we've built a reputation for reliability and customer satisfaction.
+                    </p>
+                    <p class="text-gray-600 mb-6">
+                        Our fleet includes a wide range of vehicles from economy cars to luxury SUVs, all meticulously maintained 
+                        to ensure your safety and comfort. We operate in over 50 locations nationwide with 24/7 customer support.
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <div class="flex items-center bg-white px-4 py-3 rounded-lg shadow-sm">
+                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                            <span class="text-gray-700">No hidden fees</span>
+                        </div>
+                        <div class="flex items-center bg-white px-4 py-3 rounded-lg shadow-sm">
+                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                            <span class="text-gray-700">24/7 support</span>
+                        </div>
+                        <div class="flex items-center bg-white px-4 py-3 rounded-lg shadow-sm">
+                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                            <span class="text-gray-700">Free cancellation</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-car text-2xl mr-2"></i>
+                        <span class="font-semibold text-xl">DriveEasy</span>
+                    </div>
+                    <p class="text-gray-400">
+                        Making car rental simple, fast, and affordable for everyone.
+                    </p>
+                    <div class="flex space-x-4 mt-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Company</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Careers</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Press</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Support</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Help Center</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Contact Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Newsletter</h3>
+                    <p class="text-gray-400 mb-4">Subscribe to our newsletter for the latest offers and updates.</p>
+                    <div class="flex">
+                        <input type="email" placeholder="Your email" class="px-4 py-2 rounded-l-md focus:outline-none text-gray-800 w-full">
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-r-md hover:bg-blue-700 transition">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2023 DriveEasy. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+
+    
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+
+
+
+        
+        // Authentication modal functionality
+        const authModal = document.getElementById('authModal');
+        const closeAuthModal = document.getElementById('closeAuthModal');
+        const authBtn = document.getElementById('authBtn');
+        const mobileAuthBtn = document.getElementById('mobileAuthBtn');
+        const heroAuthBtn = document.getElementById('heroAuthBtn');
+        const showSignUp = document.getElementById('showSignUp');
+        const showSignIn = document.getElementById('showSignIn');
+        const signInForm = document.getElementById('signInForm');
+        const signUpForm = document.getElementById('signUpForm');
+        const verificationForm = document.getElementById('verificationForm');
+        const verificationSuccessModal = document.getElementById('verificationSuccessModal');
+        const closeVerificationSuccess = document.getElementById('closeVerificationSuccess');
+        const userEmailDisplay = document.getElementById('userEmailDisplay');
+        const authModalTitle = document.getElementById('authModalTitle');
+
+        // Show auth modal
+        [authBtn, mobileAuthBtn, heroAuthBtn].forEach(btn => {
+            btn.addEventListener('click', function() {
+                authModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        // Close auth modal
+        closeAuthModal.addEventListener('click', function() {
+            authModal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        });
+
+        // Switch between sign in and sign up forms
+        showSignUp.addEventListener('click', function() {
+            signInForm.classList.add('hidden');
+            signUpForm.classList.remove('hidden');
+            authModalTitle.textContent = 'Create Account';
+        });
+
+        showSignIn.addEventListener('click', function() {
+            signUpForm.classList.add('hidden');
+            signInForm.classList.remove('hidden');
+            authModalTitle.textContent = 'Sign In';
+        });
+
+        // Handle sign up form submission
+        signUpForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+          
+            const name = document.getElementById("signUpName").value;
+            const email = document.getElementById("signUpEmail").value;
+            const password = document.getElementById("signUpPassword").value;
+          
+            const { data, error } = await supabase.auth.signUp({
+              email,
+              password,
+            });
+          
+            if (error) return alert(error.message);
+          
+            await supabase.from("users").insert([{ id: data.user.id, email, name, role: "client" }]);
+          
+            signUpForm.classList.add("hidden");
+            verificationForm.classList.remove("hidden");
+            userEmailDisplay.textContent = email;
+            authModalTitle.textContent = "Verify Email";
+          
+            alert("Check your email to confirm your account.");
+          });
+          
+
+        // Handle verification code submission
+        document.getElementById('verifyCodeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // In a real app, you would verify the code with your backend
+            // Here we're just simulating successful verification
+            
+            authModal.classList.add('hidden');
+            verificationSuccessModal.classList.remove('hidden');
+        });
+
+        // Resend verification code
+        document.getElementById('resendCode').addEventListener('click', function() {
+            const email = userEmailDisplay.textContent;
+            console.log('Resending verification code to:', email);
+            alert('New verification code sent to your email!');
+        });
+
+        // Close verification success modal
+        closeVerificationSuccess.addEventListener('click', function() {
+            verificationSuccessModal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            
+            // Reset forms
+            signUpForm.reset();
+            signInForm.reset();
+            document.getElementById('verifyCodeForm').reset();
+            
+            // Show sign in form for next time
+            verificationForm.classList.add('hidden');
+            signInForm.classList.remove('hidden');
+            authModalTitle.textContent = 'Sign In';
+        });
+
+        // Handle sign in form submission
+        signInForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const email = document.getElementById("signInEmail").value;
+            const password = document.getElementById("signInPassword").value;
+          
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+          
+            if (error) return alert(error.message);
+          
+            if (!data.user.email_confirmed_at) {
+              return alert("Please confirm your email first.");
+            }
+          
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+          
+            await supabase.from("verifications").insert([{
+              user_id: data.user.id,
+              otp_code: otp,
+              expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString()
+            }]);
+          
+            console.log("OTP sent:", otp); // Replace this with EmailJS or server send
+            alert("A verification code has been sent to your email.");
+          
+            localStorage.setItem("user_id", data.user.id);
+            verificationForm.classList.remove("hidden");
+            signInForm.classList.add("hidden");
+          });
+          
+
+        // Auto-focus next OTP input field
+        const otpInputs = document.querySelectorAll('#verifyCodeForm input');
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', function() {
+                if (this.value.length === 1) {
+                    if (index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+                }
+            });
+            
+            // Allow backspace to move to previous field
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value.length === 0) {
+                    if (index > 0) {
+                        otpInputs[index - 1].focus();
+                    }
+                }
+            });
+        });
+        window.addEventListener('DOMContentLoaded', function () {
+            authModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        });
+        
+    </script>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script type="module" src="supabaseClient.js"></script> 
+<script type="module" src="signup.js"></script>
+<script type="module" src="signin.js"></script>
+<script type="module" src="verify.js"></script>
+<script type="module" src="authCheck.js"></script>
+
+
+
+
+</body>
+
+</html>
+
+
+
